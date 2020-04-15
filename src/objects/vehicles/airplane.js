@@ -178,7 +178,7 @@ const createWings = () => {
 }
 
 const createWindShield = () => {
-  const windShieldGeometry = new THREE.BoxGeometry(3,15,20,1,1,1);
+  const windShieldGeometry = new THREE.BoxGeometry(3, 15, 20, 1, 1, 1);
   const windShieldMaterial = new THREE.MeshPhongMaterial({ color: Colors.white, transparent: true, opacity: .3, flatShading: true });
   
   const windshield = new THREE.Mesh(windShieldGeometry, windShieldMaterial);
@@ -223,7 +223,7 @@ const createPropellor = () => {
 }
 
 const createBlade = () => {
-    const bladeGeometry = new THREE.BoxGeometry(1,80,10,1,1,1);   
+    const bladeGeometry = new THREE.BoxGeometry(1, 80, 10, 1, 1, 1);   
     const bladeMaterial = new THREE.MeshPhongMaterial({ color: Colors.lightBlack, flatShading: true });
 
     const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
@@ -235,18 +235,18 @@ const createBlade = () => {
 
 const createTires = () => {
     const tires = new THREE.Object3D();
-    var wheelProtecGeom = new THREE.BoxGeometry(30,15,10,1,1,1);
+    var wheelProtecGeom = new THREE.BoxGeometry(30, 15, 10, 1, 1, 1);
     var wheelProtecMat = new THREE.MeshPhongMaterial({ color:Colors.red, flatShading: true });
     var wheelProtecR = new THREE.Mesh(wheelProtecGeom,wheelProtecMat);
     wheelProtecR.position.set(25,-20,25);
     tires.add(wheelProtecR);
 
-    var wheelTireGeom = new THREE.BoxGeometry(24,24,4);
+    var wheelTireGeom = new THREE.BoxGeometry(24, 24, 4);
     var wheelTireMat = new THREE.MeshPhongMaterial({ color:Colors.black, flatShading: true });
     var wheelTireR = new THREE.Mesh(wheelTireGeom,wheelTireMat);
     wheelTireR.position.set(25,-28,25);
 
-    var wheelAxisGeom = new THREE.BoxGeometry(10,10,6);
+    var wheelAxisGeom = new THREE.BoxGeometry(10, 10, 6);
     var wheelAxisMat = new THREE.MeshPhongMaterial({ color:Colors.lightBlack, flatShading: true });
     var wheelAxis = new THREE.Mesh(wheelAxisGeom,wheelAxisMat);
     wheelTireR.add(wheelAxis);
@@ -266,11 +266,11 @@ const createTires = () => {
     wheelTireB.position.set(-35,-5,0);
     tires.add(wheelTireB);
 
-    var suspensionGeom = new THREE.BoxGeometry(4,20,4);
-    suspensionGeom.applyMatrix4(new THREE.Matrix4().makeTranslation(0,10,0))
+    var suspensionGeom = new THREE.BoxGeometry(4, 20, 4);
+    suspensionGeom.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 10, 0))
     var suspensionMat = new THREE.MeshPhongMaterial({ color:Colors.red, flatShading: true });
     var suspension = new THREE.Mesh(suspensionGeom,suspensionMat);
-    suspension.position.set(-35,-5,0);
+    suspension.position.set(-35, -5, 0);
     suspension.rotation.z = -.3;
     tires.add(suspension);
 
