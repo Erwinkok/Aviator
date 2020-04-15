@@ -1,11 +1,12 @@
 import * as THREE from "three";
+import Game from "../../game";
 import Colors from "../../utils/colors";
 import AirPlane from "../vehicles/airplane";
-import Game from "../../game";
+import Meteor from "../landscape/meteor";
 
 const BasicWeapon = {};
-const bullitSpeed = 100;
-const bullits = [];
+const bullitSpeed = 200;
+const bullits = new Set();
 
 BasicWeapon.create = () => {
     const bullit = new THREE.Object3D();
@@ -33,7 +34,7 @@ BasicWeapon.create = () => {
 BasicWeapon.add = bullit => {
     bullit.position.x = AirPlane.getPosition().x + 15;
     bullit.position.y = AirPlane.getPosition().y;
-    bullits.push(bullit);
+    bullits.add(bullit);
 }
 
 BasicWeapon.fire = deltaTime => {
@@ -41,11 +42,24 @@ BasicWeapon.fire = deltaTime => {
         bullit.position.x += (bullitSpeed * deltaTime);
     });
 
-    bullits.forEach((bullit, index) => {
+    bullits.forEach(bullit => {
         if (bullit.position.x > window.innerWidth) {
-            bullits.splice(index, 1);
+            bullits.delete(bullit);
             Game.getScene().remove(bullit);
         }
+
+        const meteors = Meteor.getAllMeteors();
+        meteors.forEach(meteor => {
+            const positionDifference = bullit.position.clone().sub(meteor.position.clone());
+
+            if (positionDifference.length() < 12) {
+                Game.getScene().remove(meteor);
+                Meteor.delete(meteor);
+
+                Game.getScene().remove(bullit);
+                bullits.delete(bullit);
+            }
+        });
     });
 }
 
