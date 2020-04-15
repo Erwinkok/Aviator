@@ -59,8 +59,8 @@ Meteor.rotate = (gameSpeed, deltaTime) => {
             Game.getScene().remove(meteor);
             meteors.delete(meteor);
 
-            const planeCollisionSpeedX = 15 * differenceInPosition.x / differenceInPosition.length();
-            const planeCollisionSpeedY = 15 * differenceInPosition.y / differenceInPosition.length();
+            const planeCollisionSpeedX = 5 * differenceInPosition.x / differenceInPosition.length();
+            const planeCollisionSpeedY = 5 * differenceInPosition.y / differenceInPosition.length();
             AirPlane.setPositionDisplacement(planeCollisionSpeedX, planeCollisionSpeedY);
 
             return;
@@ -73,5 +73,9 @@ Meteor.rotate = (gameSpeed, deltaTime) => {
         }
     });
 }
+
+Meteor.delete = meteor => meteors.has(meteor) && meteors.delete(meteor);
+
+Meteor.getAllMeteors = () => meteors;
 
 export default Meteor;
