@@ -34,6 +34,11 @@ servers on ports 4173/4174. Test-only controls live under `test/` and are absent
 from the production bundle. Browser checks cover mouse/Space, touch, resizing,
 visibility, WebGL context restoration, and repeated teardown/recreation.
 
+A GitHub Actions example is provided at [docs/ci-workflow.example.yml](docs/ci-workflow.example.yml).
+It is a template rather than an active workflow: the repository credential used
+for this delivery cannot upload workflow files. Local checks above are complete;
+automated GitHub checks can be enabled later with an appropriately scoped credential.
+
 ## Structure
 
 - `src/game.ts`: owns the scene, fixed-step loop, input and resource lifecycle.

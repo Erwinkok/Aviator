@@ -97,6 +97,11 @@ ports and uses the external `web` network. `npm audit --omit=dev` reports no
 known production dependency vulnerabilities at this check. No live deployment
 or default-branch merge is part of this delivery.
 
+GitHub Actions was not installed: GitHub refused workflow upload because the
+repository credential lacks `workflow` permission. The optional configuration is
+preserved as [ci-workflow.example.yml](ci-workflow.example.yml); all reported
+checks above ran locally. The delivery branch contains no active workflow.
+
 ## Remaining recommendations
 
 1. Profile physical iPhone/Safari, Android and desktop GPUs before adding adaptive
