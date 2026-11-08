@@ -1,133 +1,72 @@
-import * as THREE from "three";
-import Utils from "../../utils/utils";
-import Colors from "../../utils/colors";
-import InputHandler from "../../input/inputHandler";
+import * as THREE from 'three';
+import Colors from '../../utils/colors.ts';
+import { normalize } from '../../utils/utils.ts';
+import type { PointerPosition } from '../../input/inputHandler.ts';
 
-const AirPlane = {};
+export const DEFAULT_HEIGHT = 100;
+export const HEIGHT_RANGE = 70;
 
-let airplane = null;
+export class AirPlane {
+  readonly mesh = new THREE.Group();
+  readonly propellor: THREE.Mesh;
+  speed = 0;
+  private displacementX = 0;
+  private displacementY = 0;
+  private collisionSpeedX = 0;
+  private collisionSpeedY = 0;
 
-let planeDefaultHeight = 100,
-    planeAmpHeight = 70,
-    planeAmpWidth = 75,
-    planeMoveSensivity = 3.5,
-    planeRotXSensivity = 0.8,
-    planeRotZSensivity = 0.4,
-    planeMinSpeed = 1.2,
-    planeMaxSpeed = 1.6,
-    planeSpeed = 0,
-    planeCollisionDisplacementX = 0,
-    planeCollisionSpeedX = 0,
-    planeCollisionDisplacementY = 0,
-    planeCollisionSpeedY = 0;
+  constructor(width: number) {
+    this.mesh.name = 'AirPlane';
+    this.propellor = createPropellor();
+    this.mesh.add(createCabin(), createEngine(), createTale(), createWings(), createWindShield(), this.propellor, createTires());
+    this.mesh.scale.setScalar(0.25);
+    this.mesh.position.set(-width, DEFAULT_HEIGHT, 0);
+  }
 
-AirPlane.create = () => {
-    airplane = new THREE.Object3D();
-    airplane.name = "AirPlane";
+  update(delta: number, pointer: PointerPosition): void {
+    this.speed = normalize(pointer.x, -0.5, 0.5, 1.2, 1.6);
+    const frameScale = delta * 60;
+    this.displacementX += this.collisionSpeedX * frameScale;
+    this.displacementY += this.collisionSpeedY * frameScale;
+    const targetX = normalize(pointer.x, -0.75, 0.75, -75 * 0.7, -75 * 2) + this.displacementX;
+    const targetY = normalize(pointer.y, -0.75, 0.75, DEFAULT_HEIGHT - HEIGHT_RANGE, DEFAULT_HEIGHT + HEIGHT_RANGE) + this.displacementY;
+    this.mesh.position.x += (targetX - this.mesh.position.x) * delta * 3.5;
+    this.mesh.position.y += (targetY - this.mesh.position.y) * delta * 3.5;
+    this.mesh.rotation.z = (targetY - this.mesh.position.y) * delta * 0.8;
+    this.mesh.rotation.x = (this.mesh.position.y - targetY) * delta * 0.4;
+    const decay = Math.max(0, 1 - delta * 3.5);
+    this.collisionSpeedX *= decay;
+    this.collisionSpeedY *= decay;
+    this.displacementX *= decay;
+    this.displacementY *= decay;
+    this.propellor.rotation.x += 0.2 * frameScale + this.speed * delta * 0.005;
+  }
 
-    const cabin = createCabin();
-    airplane.add(cabin);
-    
-    const engine = createEngine();
-    airplane.add(engine);
-
-    const tale = createTale();
-    airplane.add(tale);
-
-    const wings = createWings();
-    airplane.add(wings);
-
-    const windshield = createWindShield();
-    airplane.add(windshield);
-
-    const propellor = createPropellor();
-    airplane.add(propellor);
-
-    const tires = createTires();
-    airplane.add(tires);
-
-    airplane.scale.set(.25,.25,.25);
-    airplane.position.y = planeDefaultHeight;
-    airplane.position.x = -(window.innerWidth);
-
-    return airplane;
+  collide(x: number, y: number): void {
+    this.collisionSpeedX = x;
+    this.collisionSpeedY = y;
+  }
 }
 
-AirPlane.update = deltaTime => {
-    planeSpeed = Utils.normalize(InputHandler.mousePos.x, -.5, .5, planeMinSpeed, planeMaxSpeed);
-    
-    let targetY = Utils.normalize(InputHandler.mousePos.y, -.75, .75, planeDefaultHeight - planeAmpHeight, planeDefaultHeight + planeAmpHeight);
-    let targetX = Utils.normalize(InputHandler.mousePos.x, -.75, .75, -planeAmpWidth * .7, -planeAmpWidth * 2);
-
-    planeCollisionDisplacementX += planeCollisionSpeedX;
-    targetX += planeCollisionDisplacementX;
-
-    planeCollisionDisplacementY += planeCollisionSpeedY;
-    targetY += planeCollisionDisplacementY;
-
-    airplane.position.y += (targetY - airplane.position.y) * deltaTime * planeMoveSensivity;
-    airplane.position.x += (targetX - airplane.position.x) * deltaTime * planeMoveSensivity;
-
-    airplane.rotation.z = (targetY - airplane.position.y) * deltaTime * planeRotXSensivity;
-    airplane.rotation.x = (airplane.position.y - targetY) * deltaTime * planeRotZSensivity;
-
-    planeCollisionSpeedX += (0 - planeCollisionSpeedX) * deltaTime * planeMoveSensivity;
-    planeCollisionDisplacementX += (0 - planeCollisionDisplacementX) * deltaTime * planeMoveSensivity;
-    planeCollisionSpeedY += ( 0 - planeCollisionSpeedY) * deltaTime * planeMoveSensivity;
-    planeCollisionDisplacementY += (0 - planeCollisionDisplacementY) * deltaTime * planeMoveSensivity;
-
-    // Rotating the propellor.
-    airplane.children.some(child => {
-        if (child.name === "propellor") {
-            child.rotation.x += .2 + planeSpeed * deltaTime * .005;
-        }
-    });
+/** Change every duplicated BufferGeometry corner, preserving the original r115 shape. */
+function taperRear(geometry: THREE.BoxGeometry, upperY: number, lowerY: number, insetZ: number): void {
+  const positions = geometry.getAttribute('position');
+  for (let i = 0; i < positions.count; i++) {
+    if (positions.getX(i) >= 0) continue;
+    const y = positions.getY(i);
+    const z = positions.getZ(i);
+    positions.setY(i, y + (y > 0 ? upperY : lowerY));
+    positions.setZ(i, z - Math.sign(z) * insetZ);
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
 }
-
-AirPlane.setPositionDisplacement = (collisionSpeedX, collisionSpeedY) => {
-    console.log(collisionSpeedX, collisionSpeedY);
-    planeCollisionSpeedX = collisionSpeedX;
-    planeCollisionSpeedY = collisionSpeedY;
-}
-
-AirPlane.reset = () => {
-    planeDefaultHeight = 100,
-    planeAmpHeight = 80,
-    planeAmpWidth = 105,
-    planeMoveSensivity = 2,
-    planeRotXSensivity = 0.6,
-    planeRotZSensivity = 0.4,
-    planeMinSpeed = 1.2,
-    planeMaxSpeed = 1.6,
-    planeSpeed = 0,
-    planeCollisionDisplacementX = 0,
-    planeCollisionSpeedX = 0,
-    planeCollisionDisplacementY = 0,
-    planeCollisionSpeedY = 0;
-}
-
-AirPlane.getPosition = () => airplane.position;
-
-AirPlane.getSpeed = () => planeSpeed;
-
-AirPlane.getDefaultHeight = () => planeDefaultHeight;
-
-AirPlane.getAmpHeight = () => planeAmpHeight;
-
-export default AirPlane;
 
 const createCabin = () => {
     const cabinGeometry = new THREE.BoxGeometry(80, 50, 50, 1, 1, 1);
     const cabinMaterial = new THREE.MeshPhongMaterial({ color: Colors.red, flatShading: true });
 
-    cabinGeometry.vertices[4].y-=10;
-    cabinGeometry.vertices[4].z+=20;
-    cabinGeometry.vertices[5].y-=10;
-    cabinGeometry.vertices[5].z-=20;
-    cabinGeometry.vertices[6].y+=30;
-    cabinGeometry.vertices[6].z+=20;
-    cabinGeometry.vertices[7].y+=30;
-    cabinGeometry.vertices[7].z-=20;  
+    taperRear(cabinGeometry, -10, 30, 20);
 
     const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
     cabin.castShadow = true;
@@ -193,14 +132,7 @@ const createPropellor = () => {
     const propGeometry = new THREE.BoxGeometry(20, 10, 10, 1, 1, 1);
     const propMaterial = new THREE.MeshPhongMaterial({ color: Colors.black, flatShading: true });
 
-    propGeometry.vertices[4].y-=5;
-    propGeometry.vertices[4].z+=5;
-    propGeometry.vertices[5].y-=5;
-    propGeometry.vertices[5].z-=5;
-    propGeometry.vertices[6].y+=5;
-    propGeometry.vertices[6].z+=5;
-    propGeometry.vertices[7].y+=5;
-    propGeometry.vertices[7].z-=5;
+    taperRear(propGeometry, -5, 5, 5);
 
     const propellor = new THREE.Mesh(propGeometry, propMaterial);
     propellor.position.set(60, 0, 0);
