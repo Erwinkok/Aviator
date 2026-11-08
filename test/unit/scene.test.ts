@@ -49,7 +49,8 @@ test('static pointer does not recalculate camera projection every tick', () => {
   assert.equal(updates, 1);
   camera.resize(390, 844);
   assert.equal(updates, 2);
-  assert.ok(camera.projectileBoundary < 100);
+  assert.equal(camera.camera.aspect, 390 / 844);
+  assert.ok(Math.abs(camera.projectileBoundary - (Math.tan(65 * Math.PI / 360) * 200 + 20)) < 1e-8);
 });
 
 test('meteor starts on its flight path and exits the scene after passing the plane', () => {
@@ -124,4 +125,17 @@ test('scene teardown disposes shared cloud and aircraft resources once', () => {
   for (const resource of resources) resource.addEventListener('dispose', () => disposals++);
   disposeTree(scene);
   assert.equal(disposals, resources.size);
+});
+
+test('portrait camera keeps the plane in view at left, centre and right steering extremes', () => {
+  const camera = new CameraController(390, 844);
+  for (const x of [-1, 0, 1]) {
+    const plane = new AirPlane(390);
+    for (let i = 0; i < 600; i++) plane.update(STEP, { x, y: 0 });
+    camera.update(STEP, x, 100);
+    camera.camera.updateMatrixWorld();
+    const projected = plane.mesh.position.clone().project(camera.camera);
+    assert.ok(projected.x > -0.9 && projected.x < 0.9, `plane must remain visible for pointer x=${x}`);
+    disposeTree(plane.mesh);
+  }
 });

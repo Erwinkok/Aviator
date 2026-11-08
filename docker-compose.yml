@@ -1,0 +1,9 @@
+services:
+  aviator:
+    build: .
+    restart: always
+    networks:
+      - web
+networks:
+  web:
+    external: true

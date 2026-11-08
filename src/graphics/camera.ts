@@ -20,6 +20,9 @@ export class CameraController {
 
   resize(width: number, height: number): void {
     this.camera.aspect = Math.max(1, width) / Math.max(1, height);
+    // Keep the square viewport's horizontal play area on portrait screens;
+    // the legacy camera clipped the entire plane off the left edge on phones.
+    this.camera.position.z = 200 / Math.min(1, this.camera.aspect);
     this.camera.updateProjectionMatrix();
   }
 

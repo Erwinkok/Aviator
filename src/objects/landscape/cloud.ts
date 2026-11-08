@@ -9,7 +9,8 @@ export function createCloud(geometry: BoxGeometry, material: MeshPhongMaterial, 
     const scale = 0.1 + random() * 0.9;
     const mesh = new Mesh(geometry, material);
     mesh.position.set(i * 15, random() * 10, random() * 10);
-    mesh.rotation.set(0, random() * Math.PI * 2, random() * Math.PI * 2);
+    mesh.rotation.z = random() * Math.PI * 2;
+    mesh.rotation.y = random() * Math.PI * 2;
     mesh.scale.setScalar(scale);
     mesh.castShadow = true;
     mesh.receiveShadow = true;

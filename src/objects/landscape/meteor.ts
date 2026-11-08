@@ -13,6 +13,9 @@ export interface Meteor {
 
 export class MeteorField {
   readonly active = new Set<Meteor>();
+  private readonly geometry = new TetrahedronGeometry(10, 2);
+  private readonly material = new MeshPhongMaterial({ color: Colors.red, shininess: 0, flatShading: true });
+  private readonly pool: Meteor[] = [];
   private lastDistance = 0;
   private nextDistance: number;
 
@@ -28,16 +31,14 @@ export class MeteorField {
   }
 
   add(angle: number, distance: number): Meteor {
-    const mesh = new Mesh(new TetrahedronGeometry(10, 2),
-      new MeshPhongMaterial({ color: Colors.red, shininess: 0, flatShading: true }));
-    mesh.name = 'meteor';
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    const meteor: Meteor = { mesh, previous: new Vector3(), angle, distance };
+    const meteor = this.pool.pop() ?? this.create();
+    meteor.angle = angle;
+    meteor.distance = distance;
+    meteor.mesh.rotation.set(0, 0, 0);
     this.position(meteor);
-    meteor.previous.copy(mesh.position);
+    meteor.previous.copy(meteor.mesh.position);
     this.active.add(meteor);
-    this.scene.add(mesh);
+    this.scene.add(meteor.mesh);
     return meteor;
   }
 
@@ -66,11 +67,24 @@ export class MeteorField {
   remove(meteor: Meteor): void {
     if (!this.active.delete(meteor)) return;
     this.scene.remove(meteor.mesh);
-    meteor.mesh.geometry.dispose();
-    meteor.mesh.material.dispose();
+    this.pool.push(meteor);
   }
 
-  dispose(): void { for (const meteor of this.active) this.remove(meteor); }
+  dispose(): void {
+    for (const meteor of this.active) this.scene.remove(meteor.mesh);
+    this.active.clear();
+    this.pool.length = 0;
+    this.geometry.dispose();
+    this.material.dispose();
+  }
+
+  private create(): Meteor {
+    const mesh = new Mesh(this.geometry, this.material);
+    mesh.name = 'meteor';
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return { mesh, previous: new Vector3(), angle: 0, distance: 0 };
+  }
 
   private interval(): number { return Math.floor(20 + this.random() * 80); }
   private position(meteor: Meteor): void {
