@@ -62,6 +62,10 @@ export class BasicWeapon {
     this.material.dispose();
   }
 
+  reset(): void {
+    for (const bullet of this.active) this.remove(bullet);
+  }
+
   private create(): Bullet {
     const mesh = new Group();
     mesh.name = 'bullet';
