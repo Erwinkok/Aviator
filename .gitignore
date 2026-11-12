@@ -105,3 +105,6 @@ dist
 
 #visual studio
 .vs
+
+# Wrangler local state
+.wrangler/
