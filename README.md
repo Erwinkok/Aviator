@@ -9,7 +9,7 @@ account, scoring system or external service. WebGL 2 is required.
 
 ## Development
 
-Use Node **20.19+ or 22.12+** (Node 22 recommended).
+Use Node **22.12+** (required by Vite and the pinned Wrangler tool).
 
 ```sh
 npm ci
@@ -19,7 +19,8 @@ npm run dev
 Open the loopback address Vite prints. `npm run build` checks types and generates
 `dist/`; `npm run preview` serves that build locally. Asset paths are relative,
 so the generated site also works under a subdirectory. Generated bundles are no
-longer tracked in git.
+longer tracked in git. npm run build:watch enables continuous production rebuilds;
+npm run build:prod remains an alias for the finite production build.
 
 ## Verification
 
@@ -29,7 +30,7 @@ npm run check
 ```
 
 The check runs strict type checking, a production build, unit/regression tests,
-and real WebGL browser checks. Playwright starts/stops local preview and test
+real Vite build/Cloudflare packaging regressions, and WebGL browser checks. Playwright starts/stops local preview and test
 servers on ports 4173/4174. Test-only controls live under `test/` and are absent
 from the production bundle. Browser checks cover mouse/Space, touch, resizing,
 visibility, WebGL context restoration, and repeated teardown/recreation.
@@ -67,3 +68,14 @@ A multi-stage Dockerfile and `docker-compose.yml` are provided for a later
 private deployment. The runtime joins the external `web` network, publishes no
 ports, and permits framing by the Hub. Connecting a hostname/login and deploying
 are separate from this pull request.
+
+## Cloudflare static hosting
+
+The existing Wrangler configuration serves the freshly generated dist/ directory
+as the aviator Worker, retaining its compatibility date and empty previews block.
+The generated HTML references Vite's hashed module/CSS assets; no manually maintained
+bundle.js or checked-in build is needed.
+
+After npm run build, use npm run deploy:check to validate packaging without
+publishing. npm test also exercises real Wrangler dry-run packaging and Preview
+validation against a rejecting local API, with no upload or deployment.

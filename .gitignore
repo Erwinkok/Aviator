@@ -111,3 +111,6 @@ WORKING.md
 test-results/
 playwright-report/
 benchmark-results/
+
+# Wrangler local state
+.wrangler/

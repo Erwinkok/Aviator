@@ -25,6 +25,11 @@ test('mouse steers the plane and releasing Space fires from its current position
   await expect.poll(() => page.evaluate(() => window.aviatorTest.game.plane.mesh.position.y)).toBeGreaterThan(135);
   await page.keyboard.down('Space');
   expect(await page.evaluate(() => window.aviatorTest.game.weapon.active.size)).toBe(0);
+  await page.evaluate(() => {
+    // Freeze after the existing input listener fires, so both positions are sampled
+    // at release time rather than after the plane moves between Playwright calls.
+    window.addEventListener('keyup', () => window.aviatorTest.game.stop(), { once: true });
+  });
   await page.keyboard.up('Space');
   await expect.poll(() => page.evaluate(() => window.aviatorTest.game.weapon.active.size)).toBe(1);
   const shot = await page.evaluate(() => {
@@ -32,7 +37,7 @@ test('mouse steers the plane and releasing Space fires from its current position
     const bullet = [...game.weapon.active][0];
     return { y: bullet?.mesh.position.y, planeY: game.plane.mesh.position.y };
   });
-  expect(Math.abs((shot.y ?? 0) - shot.planeY)).toBeLessThan(5);
+  expect(shot.y).toBe(shot.planeY);
 });
 
 test('resizing updates canvas and projection without recreating the game', async ({ page }) => {
