@@ -8,11 +8,15 @@
     "build": "webpack --config webpack.config.js",
     "build:watch": "webpack --config webpack.config.js --watch",
     "build:prod": "webpack -p",
+    "deploy:check": "wrangler deploy --dry-run",
     "start": "node server.js",
     "dev": "webpack-dev-server"
   },
   "author": "Erwin Kok",
   "license": "ISC",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "three": "^0.115.0"
   },
@@ -21,6 +25,7 @@
     "babel-loader": "^8.1.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3"
+    "webpack-dev-server": "^3.10.3",
+    "wrangler": "4.158.0"
   }
 }
