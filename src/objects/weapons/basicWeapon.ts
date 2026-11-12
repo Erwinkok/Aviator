@@ -24,7 +24,8 @@ export class BasicWeapon {
     this.active.add(bullet);
   }
 
-  update(delta: number, meteors: MeteorField, boundary: number): void {
+  update(delta: number, meteors: MeteorField, boundary: number): number {
+    let destroyed = 0;
     for (const bullet of this.active) {
       bullet.previous.copy(bullet.mesh.position);
       bullet.mesh.position.x += 200 * delta;
@@ -47,10 +48,12 @@ export class BasicWeapon {
       if (firstHit) {
         meteors.remove(firstHit);
         this.remove(bullet);
+        destroyed++;
       } else if (bullet.mesh.position.x > boundary || bullet.age > 8) {
         this.remove(bullet);
       }
     }
+    return destroyed;
   }
 
   dispose(): void {
