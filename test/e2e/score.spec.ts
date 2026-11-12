@@ -6,6 +6,7 @@ const BEST_KEY = 'aviator.best-score.v1';
 async function load(page: Page) {
   await page.goto('http://127.0.0.1:4174/test/harness.html');
   await page.waitForFunction(() => window.aviatorTest?.game.renderer.info.render.calls > 0);
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await page.evaluate(() => {
     const game = window.aviatorTest.game;
     game.stop();
@@ -33,6 +34,7 @@ test('production flight displays growing points and retains the best after reloa
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect.poll(async () => Number(await page.locator('.score-current').textContent())).toBeGreaterThan(2);
   const score = Number(await page.locator('.score-current').textContent());
   await page.reload();

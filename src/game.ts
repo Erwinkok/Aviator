@@ -15,6 +15,7 @@ import type { Random } from './utils/utils.ts';
 import { Health } from './health.ts';
 import { HealthView } from './healthView.ts';
 import { PersonalBest, RunScore } from './score.ts';
+import { RunFlow } from './runFlow.ts';
 
 export class Game {
   readonly scene = createScene();
@@ -22,6 +23,7 @@ export class Game {
   readonly health = new Health();
   readonly score = new RunScore();
   readonly best = new PersonalBest();
+  readonly flow = new RunFlow();
   readonly camera: CameraController;
   readonly plane: AirPlane;
   readonly sea: Sea;
@@ -45,20 +47,33 @@ export class Game {
     this.camera = new CameraController(surface.clientWidth, surface.clientHeight);
     this.sun = createLighting(this.scene);
     this.plane = new AirPlane(surface.clientWidth);
+    this.plane.mesh.position.set(-100, 100, 0);
+    this.camera.update(0, 0, 100);
     this.sea = new Sea(random);
     this.sky = new Sky(random);
     this.meteors = new MeteorField(this.scene, random);
     this.weapon = new BasicWeapon(this.scene);
     this.scene.add(this.plane.mesh, this.sea.mesh, this.sky.mesh);
     this.input = new InputHandler(surface, () => {
-      if (this.running && !this.health.gameOver && !document.hidden && !this.contextLost) this.weapon.fire(this.plane.mesh.position);
+      if (this.running && this.flow.state === 'playing' && !document.hidden && !this.contextLost) this.weapon.fire(this.plane.mesh.position);
     });
-    this.healthView = new HealthView(surface, () => this.retry());
+    surface.tabIndex = 0;
+    surface.setAttribute('aria-label', 'Aviator flight');
+    this.healthView = new HealthView(surface, {
+      play: () => this.play(), pause: () => this.pause(), resume: () => this.resume(), retry: () => this.retry(),
+    });
     this.updateScoreView();
-    this.healthView.update(this.health);
+    this.healthView.update(this.health, this.flow.state);
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(surface);
     const options = { signal: this.controller.signal };
+    window.addEventListener('keydown', (event) => {
+      if (event.code !== 'Escape' || event.repeat || this.disposed) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+      if (this.flow.state === 'playing') { event.preventDefault(); this.pause(); }
+      else if (this.flow.state === 'paused') { event.preventDefault(); this.resume(); }
+    }, options);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.saveBest();
       this.syncLoop();
@@ -81,13 +96,14 @@ export class Game {
   }
 
   stop(): void {
+    if (this.disposed) return;
     this.saveBest();
     this.running = false;
     this.syncLoop();
   }
 
   tick(delta: number): void {
-    if (this.disposed || this.health.gameOver) return;
+    if (this.disposed || this.health.gameOver || this.flow.state !== 'playing') return;
     this.health.update(delta);
     this.progress.update(delta, this.plane.speed);
     this.plane.update(delta, this.input.position);
@@ -102,14 +118,32 @@ export class Game {
     this.best.observe(this.score.total);
     if (this.health.gameOver) {
       this.score.finish();
+      this.flow.finish();
       this.best.save();
     }
     this.updateScoreView();
-    this.healthView.update(this.health);
+    this.healthView.update(this.health, this.flow.state);
+  }
+
+  play(): void {
+    if (this.disposed || !this.flow.play()) return;
+    this.continueFlight();
+  }
+
+  pause(): void {
+    if (this.disposed || !this.flow.pause()) return;
+    this.saveBest();
+    this.healthView.update(this.health, this.flow.state);
+    this.syncLoop();
+  }
+
+  resume(): void {
+    if (this.disposed || !this.flow.resume()) return;
+    this.continueFlight();
   }
 
   retry(): void {
-    if (this.disposed || !this.health.gameOver) return;
+    if (this.disposed || !this.health.gameOver || !this.flow.retry()) return;
     this.health.reset();
     this.score.reset();
     this.progress.reset();
@@ -120,8 +154,7 @@ export class Game {
     this.camera.camera.position.y = 100;
     this.camera.update(0, 0, 100);
     this.updateScoreView();
-    this.healthView.update(this.health);
-    this.start();
+    this.continueFlight();
   }
 
   dispose(): void {
@@ -143,11 +176,22 @@ export class Game {
 
   private syncLoop(): void {
     this.stepper.reset();
-    this.renderer.setAnimationLoop(this.running && !this.health.gameOver && !document.hidden && !this.contextLost ? this.frame : null);
+    const animate = this.running && this.flow.state === 'playing' && !document.hidden && !this.contextLost;
+    this.renderer.setAnimationLoop(animate ? this.frame : null);
+    if (!animate && !this.disposed && !document.hidden && !this.contextLost) {
+      this.renderer.render(this.scene, this.camera.camera);
+    }
+  }
+
+  private continueFlight(): void {
+    this.healthView.update(this.health, this.flow.state);
+    this.surface.focus({ preventScroll: true });
+    this.start();
   }
 
   private updateScoreView(): void {
-    this.healthView.updateScore(this.score.total, this.best.total, this.best.persistent);
+    this.healthView.updateScore(this.score.total, this.best.total, this.best.persistent,
+      this.score.distanceTravelled, this.score.meteorsDestroyed);
   }
 
   private saveBest(): void {
@@ -169,5 +213,6 @@ export class Game {
     const height = Math.max(1, this.surface.clientHeight);
     this.renderer.setSize(width, height);
     this.camera.resize(width, height);
+    this.syncLoop();
   }
 }

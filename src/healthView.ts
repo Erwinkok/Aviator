@@ -1,6 +1,8 @@
 import { MAX_HEARTS, type Health } from './health.ts';
+import type { RunPhase } from './runFlow.ts';
 
 const scoreFormat = new Intl.NumberFormat('en-US');
+interface FlowActions { play(): void; pause(): void; resume(): void; retry(): void }
 
 /** DOM owned by one game, including its keyboard/touch accessible retry control. */
 export class HealthView {
@@ -13,12 +15,21 @@ export class HealthView {
   private readonly bestLabel = document.createElement('dt');
   private readonly finalScore = document.createElement('p');
   private readonly finalBest = document.createElement('p');
+  private readonly summary = document.createElement('dl');
+  private readonly finalDistance = document.createElement('dd');
+  private readonly finalMeteors = document.createElement('dd');
+  private readonly heading = document.createElement('h1');
+  private readonly message = document.createElement('p');
+  private readonly controls = document.createElement('p');
+  private readonly actionButton = document.createElement('button');
+  private readonly pauseButton = document.createElement('button');
   private readonly hearts: HTMLElement[] = [];
   private readonly controller = new AbortController();
   private previous = '';
   private previousScore = '';
+  private phase: RunPhase = 'ready';
 
-  constructor(surface: HTMLElement, retry: () => void) {
+  constructor(surface: HTMLElement, actions: FlowActions) {
     this.hud.className = 'health-hud';
     const label = document.createElement('span');
     label.className = 'health-label';
@@ -49,26 +60,39 @@ export class HealthView {
     this.scoreHud.append(scoreLabel, this.currentScore, this.bestLabel, this.bestScore);
 
     this.dialog.className = 'game-over';
-    this.dialog.setAttribute('aria-label', 'Game over');
-    const heading = document.createElement('h1');
-    heading.textContent = 'Game over';
-    const message = document.createElement('p');
-    message.textContent = 'Ready for another flight?';
     this.finalScore.className = 'final-score';
     this.finalBest.className = 'final-best';
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = 'Retry';
-    button.autofocus = true;
-    button.addEventListener('click', retry, { signal: this.controller.signal });
-    // Keep the retry choice available until a new run starts.
+    this.summary.className = 'run-summary';
+    this.finalDistance.className = 'final-distance';
+    this.finalMeteors.className = 'final-meteors';
+    for (const [title, value] of [['Distance', this.finalDistance], ['Meteors destroyed', this.finalMeteors]] as const) {
+      const row = document.createElement('div');
+      const label = document.createElement('dt');
+      label.textContent = title;
+      row.append(label, value);
+      this.summary.append(row);
+    }
+    this.controls.className = 'flight-controls';
+    this.controls.innerHTML = 'Move your mouse or drag to steer.<br>Release <strong>Space</strong> on a keyboard to fire.<br>Use <strong>Pause</strong> or <strong>Esc</strong> to take a break.';
+    this.actionButton.type = 'button';
+    this.actionButton.autofocus = true;
+    this.actionButton.addEventListener('click', () => {
+      if (this.phase === 'ready') actions.play();
+      else if (this.phase === 'paused') actions.resume();
+      else if (this.phase === 'over') actions.retry();
+    }, { signal: this.controller.signal });
+    this.pauseButton.className = 'pause-button';
+    this.pauseButton.type = 'button';
+    this.pauseButton.textContent = 'Pause';
+    this.pauseButton.addEventListener('click', () => actions.pause(), { signal: this.controller.signal });
+    // Escape is handled by Game; never let native dialog cancellation bypass it.
     this.dialog.addEventListener('cancel', (event) => event.preventDefault(), { signal: this.controller.signal });
-    this.dialog.append(heading, this.finalScore, this.finalBest, message, button);
-    surface.append(this.hud, this.scoreHud, this.dialog);
+    this.dialog.append(this.heading, this.finalScore, this.finalBest, this.summary, this.message, this.controls, this.actionButton);
+    surface.append(this.hud, this.scoreHud, this.pauseButton, this.dialog);
   }
 
-  updateScore(score: number, best: number, persistent: boolean): void {
-    const state = `${score}:${best}:${persistent}`;
+  updateScore(score: number, best: number, persistent: boolean, distance: number, meteors: number): void {
+    const state = `${score}:${best}:${persistent}:${distance}:${meteors}`;
     if (state === this.previousScore) return;
     this.previousScore = state;
     this.currentScore.textContent = scoreFormat.format(score);
@@ -76,17 +100,28 @@ export class HealthView {
     this.bestLabel.textContent = persistent ? 'Best' : 'Best this visit';
     this.finalScore.textContent = `Score ${scoreFormat.format(score)}`;
     this.finalBest.textContent = `${persistent ? 'Personal best' : 'Best this visit'} ${scoreFormat.format(best)}`;
+    this.finalDistance.textContent = scoreFormat.format(distance);
+    this.finalMeteors.textContent = scoreFormat.format(meteors);
   }
 
-  update(health: Health): void {
-    const state = `${health.hearts}:${health.protected}`;
+  update(health: Health, phase: RunPhase): void {
+    const state = `${health.hearts}:${health.protected}:${phase}`;
     if (state === this.previous) return;
     this.previous = state;
     this.hearts.forEach((heart, i) => heart.classList.toggle('is-empty', i >= health.hearts));
     this.hud.classList.toggle('is-protected', health.protected);
     this.status.textContent = `${health.hearts} of ${MAX_HEARTS} hearts${health.protected ? ' · Protected' : ''}`;
-    if (health.gameOver && !this.dialog.open) this.dialog.showModal();
-    else if (!health.gameOver && this.dialog.open) this.dialog.close();
+    this.phase = phase;
+    this.pauseButton.hidden = phase !== 'playing';
+    this.controls.hidden = phase !== 'ready';
+    this.finalScore.hidden = this.finalBest.hidden = this.summary.hidden = phase !== 'over';
+    const title = phase === 'ready' ? 'Aviator' : phase === 'paused' ? 'Paused' : 'Game over';
+    this.heading.textContent = title;
+    this.dialog.setAttribute('aria-label', title);
+    this.message.textContent = phase === 'ready' ? 'Fly, dodge, and beat your best.' : phase === 'paused' ? 'Your flight is on hold.' : 'Ready for another flight?';
+    this.actionButton.textContent = phase === 'ready' ? 'Play' : phase === 'paused' ? 'Resume' : 'Retry';
+    if (phase !== 'playing' && !this.dialog.open) this.dialog.showModal();
+    else if (phase === 'playing' && this.dialog.open) this.dialog.close();
   }
 
   dispose(): void {
@@ -95,5 +130,6 @@ export class HealthView {
     this.dialog.remove();
     this.hud.remove();
     this.scoreHud.remove();
+    this.pauseButton.remove();
   }
 }

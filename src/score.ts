@@ -8,6 +8,8 @@ export class RunScore {
   private finished = false;
 
   get total(): number { return Math.min(Number.MAX_SAFE_INTEGER, this.distance + this.kills * METEOR_POINTS); }
+  get distanceTravelled(): number { return this.distance; }
+  get meteorsDestroyed(): number { return this.kills; }
 
   update(distance: number, destroyedMeteors = 0): void {
     if (this.finished) return;

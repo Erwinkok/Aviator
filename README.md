@@ -1,7 +1,11 @@
 # Aviator
 
 Erwin Kok's pastel, low-poly flying game. Steer with the mouse or drag on a
-touchscreen; release **Space** to fire. The plane, rolling sea, clouds, meteors,
+touchscreen; release **Space** on a keyboard to fire. Choose **Play** on the
+opening controls screen to begin. Use **Pause** / **Resume**, or **Esc** on a
+desktop keyboard, to hold and continue the same flight. Pausing freezes flight,
+score, obstacles, hit protection and firing; switching tabs or restoring WebGL
+does not cancel a manual pause. The plane, rolling sea, clouds, meteors,
 collisions and speed progression preserve the original game. Start each run with
 three hearts. A meteor hit costs one heart and grants 1.5 seconds of protection
 during active play; further contacts during protection cause no damage or knockback.
@@ -11,7 +15,8 @@ filled and outlined hearts distinguish remaining health without relying on colou
 
 Earn **one point per whole distance unit** and **100 points per meteor shot down**.
 The score and personal best appear at the top right; Game over shows the final
-score. Colliding with meteors, missing shots and offscreen meteors earn no bonus.
+score, whole distance travelled and meteors destroyed. Colliding with meteors,
+missing shots and offscreen meteors earn no bonus.
 Retry resets the run's score while keeping the best. The best updates during play
 and is saved when the run ends or the page is hidden/left, without storage writes
 on every frame. It stays local to this browser and site; clearing site data resets
@@ -59,6 +64,7 @@ automated GitHub checks can be enabled later with an appropriately scoped creden
 - `src/simulation.ts`: deterministic cadence and flight progress, independent of WebGL.
 - `src/health.ts`, `src/healthView.ts`: run health, hit protection and accessible health/retry UI.
 - `src/score.ts`: run score and resilient browser-local personal best storage.
+- `src/runFlow.ts`: ready, playing, paused and game-over transitions, separate from page suspension.
 - `src/objects/`: aircraft, sea/clouds, meteors and projectiles.
 - `src/graphics/`: camera, original-palette lighting and renderer.
 - `test/`: logic tests and browser-only harness.
