@@ -1,0 +1,77 @@
+{
+  "originalCommit": "38a9533",
+  "comparedCommit": "384659b202dd1190c57fe54d89aa4a0bc34ca8ad",
+  "workingTreeDiffers": true,
+  "node": "v20.19.2",
+  "chromium": "156.0.8078.79",
+  "viewport": "1280x720, DPR 1",
+  "rendering": "Chromium SwiftShader software WebGL; timings are lab diagnostics, not device FPS",
+  "legacy": {
+    "initial": {
+      "calls": 35,
+      "triangles": 1288,
+      "geometries": 29,
+      "textures": 1
+    },
+    "cpu": {
+      "medianTickMs": 0.035166666706403095,
+      "samplesTickMs": [
+        0.033166666626930234,
+        0.03449999988079071,
+        0.03450000007947286,
+        0.035166666706403095,
+        0.03866666674613953,
+        0.039666666587193804,
+        0.0475
+      ]
+    },
+    "after60ShotsAndDrain": {
+      "calls": 53,
+      "triangles": 1556,
+      "geometries": 212,
+      "textures": 1
+    },
+    "after120ShotsAndDrain": {
+      "calls": 44,
+      "triangles": 1500,
+      "geometries": 335,
+      "textures": 1
+    },
+    "comparableEsbuildBytes": 627385,
+    "comparableEsbuildGzipBytes": 156666
+  },
+  "modern": {
+    "initial": {
+      "calls": 49,
+      "triangles": 1456,
+      "geometries": 13,
+      "textures": 2
+    },
+    "cpu": {
+      "medianTickMs": 0.029166666666666667,
+      "samplesTickMs": [
+        0.027333333293596905,
+        0.027333333492279052,
+        0.027666666507720948,
+        0.029166666666666667,
+        0.030333333412806193,
+        0.030833333333333334,
+        0.0398333332935969
+      ]
+    },
+    "after60ShotsAndDrain": {
+      "calls": 48,
+      "triangles": 1468,
+      "geometries": 14,
+      "textures": 2
+    },
+    "after120ShotsAndDrain": {
+      "calls": 65,
+      "triangles": 1744,
+      "geometries": 15,
+      "textures": 2
+    },
+    "comparableEsbuildBytes": 557005,
+    "comparableEsbuildGzipBytes": 140079
+  }
+}

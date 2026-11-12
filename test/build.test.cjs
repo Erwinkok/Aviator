@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { spawn, spawnSync } = require('node:child_process');
-const { cpSync, mkdtempSync, readFileSync, writeFileSync } = require('node:fs');
+const { existsSync, mkdtempSync, readFileSync, writeFileSync } = require('node:fs');
 const { createServer } = require('node:http');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
@@ -16,10 +16,8 @@ test('npm run build exits successfully and Wrangler packages its static assets',
     const fixture = mkdtempSync(path.join(tmpdir(), 'aviator-build-test-'));
     const output = path.join(fixture, 'dist');
     const root = path.resolve(__dirname, '..');
-    // A clean checkout supplies the tracked HTML and static files; webpack replaces its bundle.
-    cpSync(path.join(root, 'dist'), output, { recursive: true });
     const result = await new Promise((resolve, reject) => {
-        const child = spawn('npm', ['run', 'build', '--', '--output-path', output], {
+        const child = spawn('npm', ['run', 'build', '--', '--outDir', output], {
             cwd: path.resolve(__dirname, '..'),
             detached: true,
             stdio: ['ignore', 'pipe', 'pipe']
@@ -45,16 +43,20 @@ test('npm run build exits successfully and Wrangler packages its static assets',
     assert.equal(result.timedOut, false, `Build did not exit within 30 seconds:\n${result.logs}`);
     assert.equal(result.signal, null, result.logs);
     assert.equal(result.code, 0, result.logs);
-    assert.ok(readFileSync(path.join(output, 'bundle.js')).length > 0, 'Build must emit bundle.js');
-
     const html = readFileSync(path.join(output, 'index.html'), 'utf8');
-    assert.match(html, /<script\s+src="bundle\.js"/);
-    const config = JSON.parse(readFileSync(path.join(root, 'wrangler.json'), 'utf8'));
-    if (config.assets) {
-        assert.equal(path.resolve(root, config.assets.directory), require('../webpack.config.js').output.path,
-            'Wrangler must serve webpack output');
-        config.assets.directory = output;
+    assert.match(html, /<script\b[^>]*type="module"/);
+    const assets = [...html.matchAll(/(?:src|href)="(\.\/assets\/[^"]+)"/g)].map(match => match[1]);
+    assert.ok(assets.some(asset => asset.endsWith('.js')), 'Vite must emit a JavaScript module');
+    assert.ok(assets.some(asset => asset.endsWith('.css')), 'Vite must emit the game stylesheet');
+    for (const asset of assets) {
+        assert.ok(readFileSync(path.resolve(output, asset)).length > 0, `HTML asset must exist: ${asset}`);
     }
+    assert.equal(existsSync(path.join(output, 'bundle.js')), false, 'Do not ship the obsolete webpack bundle');
+    assert.equal(existsSync(path.join(output, 'test')), false, 'Test harness must stay out of production');
+    const config = JSON.parse(readFileSync(path.join(root, 'wrangler.json'), 'utf8'));
+    assert.equal(path.resolve(root, config.assets.directory), path.join(root, 'dist'),
+        'Wrangler must serve the Vite output directory');
+    config.assets.directory = output;
     const configPath = path.join(fixture, 'wrangler.json');
     writeFileSync(configPath, JSON.stringify(config));
     // Real CLI validation and asset packaging, without authentication or publication.

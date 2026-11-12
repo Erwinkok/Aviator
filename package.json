@@ -1,31 +1,40 @@
 {
-  "name": "three-js-game",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "node --test test/build.test.cjs",
-    "build": "webpack --config webpack.config.js",
-    "build:watch": "webpack --config webpack.config.js --watch",
-    "build:prod": "webpack -p",
-    "deploy:check": "wrangler deploy --dry-run",
-    "start": "node server.js",
-    "dev": "webpack-dev-server"
-  },
+  "name": "aviator",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A low-poly flying game built with TypeScript and Three.js",
   "author": "Erwin Kok",
   "license": "ISC",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "start": "npm run dev",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "tsx --test test/unit/*.test.ts && npm run test:build",
+    "test:e2e": "playwright test",
+    "check": "npm run build && npm test && npm run test:e2e",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "build:watch": "npm run typecheck && vite build --watch",
+    "build:prod": "npm run build",
+    "deploy:check": "wrangler deploy --dry-run",
+    "test:build": "node --test test/build.test.cjs"
   },
   "dependencies": {
-    "three": "^0.115.0"
+    "three": "0.187.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "babel-loader": "^8.1.0",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3",
+    "@playwright/test": "1.65.0",
+    "@types/node": "20.19.43",
+    "@types/three": "0.187.0",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.6",
     "wrangler": "4.158.0"
   }
 }

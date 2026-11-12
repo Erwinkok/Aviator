@@ -1,0 +1,88 @@
+{
+  "measuredSourceSha256": "b581eb6ef774b7ad14a0f030f15df86d361ad2e01853c3f19a48f49b1437d63b",
+  "originalCommit": "38a9533",
+  "comparedCommit": "384659b202dd1190c57fe54d89aa4a0bc34ca8ad",
+  "workingTreeDiffers": true,
+  "node": "v20.19.2",
+  "chromium": "156.0.8078.79",
+  "viewport": "1280x720, DPR 1",
+  "rendering": "Chromium SwiftShader software WebGL; timings are lab diagnostics, not device FPS",
+  "legacy": {
+    "initial": {
+      "calls": 35,
+      "triangles": 1288,
+      "geometries": 29,
+      "textures": 1
+    },
+    "cpu": {
+      "medianTickMs": 0.03549999992052714,
+      "samplesTickMs": [
+        0.03383333345254262,
+        0.03400000015894572,
+        0.034666666587193806,
+        0.03549999992052714,
+        0.03916666666666667,
+        0.041666666666666664,
+        0.04599999984105428
+      ]
+    },
+    "frame": {
+      "medianFrameMs": 0.6000000238418579,
+      "p95FrameMs": 2.5,
+      "meaning": "tick + render + WebGL finish; software renderer, no vsync"
+    },
+    "after60ShotsAndDrain": {
+      "calls": 42,
+      "triangles": 1372,
+      "geometries": 215,
+      "textures": 1
+    },
+    "after120ShotsAndDrain": {
+      "calls": 40,
+      "triangles": 1348,
+      "geometries": 341,
+      "textures": 1
+    },
+    "comparableEsbuildBytes": 627439,
+    "comparableEsbuildGzipBytes": 156667
+  },
+  "modern": {
+    "initial": {
+      "calls": 28,
+      "triangles": 3148,
+      "geometries": 13,
+      "textures": 2
+    },
+    "cpu": {
+      "medianTickMs": 0.032833333214124044,
+      "samplesTickMs": [
+        0.0323333332935969,
+        0.0323333332935969,
+        0.03233333349227905,
+        0.032833333214124044,
+        0.03399999996026357,
+        0.035,
+        0.03933333337306976
+      ]
+    },
+    "frame": {
+      "medianFrameMs": 0.5,
+      "p95FrameMs": 1.399999976158142,
+      "meaning": "tick + render + WebGL finish; software renderer, no vsync"
+    },
+    "after60ShotsAndDrain": {
+      "calls": 32,
+      "triangles": 3292,
+      "geometries": 16,
+      "textures": 2
+    },
+    "after120ShotsAndDrain": {
+      "calls": 32,
+      "triangles": 3292,
+      "geometries": 16,
+      "textures": 2
+    },
+    "comparableEsbuildBytes": 561818,
+    "comparableEsbuildGzipBytes": 141375
+  }
+}

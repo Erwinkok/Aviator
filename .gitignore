@@ -106,5 +106,11 @@ dist
 #visual studio
 .vs
 
+# Local work and generated checks
+WORKING.md
+test-results/
+playwright-report/
+benchmark-results/
+
 # Wrangler local state
 .wrangler/
