@@ -9,8 +9,16 @@ At zero hearts the flight stops. Choose **Retry** (touch, mouse or keyboard) to
 start a fresh run without reloading the page. Health is shown at the top left;
 filled and outlined hearts distinguish remaining health without relying on colour.
 
+Earn **one point per whole distance unit** and **100 points per meteor shot down**.
+The score and personal best appear at the top right; Game over shows the final
+score. Colliding with meteors, missing shots and offscreen meteors earn no bonus.
+Retry resets the run's score while keeping the best. The best updates during play
+and is saved when the run ends or the page is hidden/left, without storage writes
+on every frame. It stays local to this browser and site; clearing site data resets
+it. If storage is unavailable, the HUD says **Best this visit** and play continues.
+
 Rewritten in strict TypeScript with Vite and Three.js r187. There is no server,
-account, scoring system or external service. WebGL 2 is required.
+account or external service. WebGL 2 is required.
 
 ## Development
 
@@ -50,6 +58,7 @@ automated GitHub checks can be enabled later with an appropriately scoped creden
 - `src/game.ts`: owns the scene, fixed-step loop, input and resource lifecycle.
 - `src/simulation.ts`: deterministic cadence and flight progress, independent of WebGL.
 - `src/health.ts`, `src/healthView.ts`: run health, hit protection and accessible health/retry UI.
+- `src/score.ts`: run score and resilient browser-local personal best storage.
 - `src/objects/`: aircraft, sea/clouds, meteors and projectiles.
 - `src/graphics/`: camera, original-palette lighting and renderer.
 - `test/`: logic tests and browser-only harness.

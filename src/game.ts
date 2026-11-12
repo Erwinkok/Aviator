@@ -14,11 +14,14 @@ import { disposeTree } from './utils/resources.ts';
 import type { Random } from './utils/utils.ts';
 import { Health } from './health.ts';
 import { HealthView } from './healthView.ts';
+import { PersonalBest, RunScore } from './score.ts';
 
 export class Game {
   readonly scene = createScene();
   readonly progress = new FlightProgress();
   readonly health = new Health();
+  readonly score = new RunScore();
+  readonly best = new PersonalBest();
   readonly camera: CameraController;
   readonly plane: AirPlane;
   readonly sea: Sea;
@@ -51,11 +54,15 @@ export class Game {
       if (this.running && !this.health.gameOver && !document.hidden && !this.contextLost) this.weapon.fire(this.plane.mesh.position);
     });
     this.healthView = new HealthView(surface, () => this.retry());
+    this.updateScoreView();
     this.healthView.update(this.health);
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(surface);
     const options = { signal: this.controller.signal };
-    document.addEventListener('visibilitychange', () => this.syncLoop(), options);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.saveBest();
+      this.syncLoop();
+    }, options);
     this.renderer.domElement.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
       this.contextLost = true;
@@ -74,6 +81,7 @@ export class Game {
   }
 
   stop(): void {
+    this.saveBest();
     this.running = false;
     this.syncLoop();
   }
@@ -88,13 +96,22 @@ export class Game {
     this.sky.update(this.progress.speed, delta);
     this.meteors.spawn(this.progress.distance);
     this.meteors.update(this.progress.speed, delta, this.plane, this.onHit);
-    this.weapon.update(delta, this.meteors, this.camera.projectileBoundary);
+    // A lethal collision ends scoring before any remaining bullets can hit.
+    const destroyed = this.health.gameOver ? 0 : this.weapon.update(delta, this.meteors, this.camera.projectileBoundary);
+    this.score.update(this.progress.distance, destroyed);
+    this.best.observe(this.score.total);
+    if (this.health.gameOver) {
+      this.score.finish();
+      this.best.save();
+    }
+    this.updateScoreView();
     this.healthView.update(this.health);
   }
 
   retry(): void {
     if (this.disposed || !this.health.gameOver) return;
     this.health.reset();
+    this.score.reset();
     this.progress.reset();
     this.meteors.reset();
     this.weapon.reset();
@@ -102,6 +119,7 @@ export class Game {
     this.plane.reset(this.surface.clientWidth);
     this.camera.camera.position.y = 100;
     this.camera.update(0, 0, 100);
+    this.updateScoreView();
     this.healthView.update(this.health);
     this.start();
   }
@@ -126,6 +144,16 @@ export class Game {
   private syncLoop(): void {
     this.stepper.reset();
     this.renderer.setAnimationLoop(this.running && !this.health.gameOver && !document.hidden && !this.contextLost ? this.frame : null);
+  }
+
+  private updateScoreView(): void {
+    this.healthView.updateScore(this.score.total, this.best.total, this.best.persistent);
+  }
+
+  private saveBest(): void {
+    if (this.disposed) return;
+    this.best.save();
+    this.updateScoreView();
   }
 
   private readonly frame = (timestamp: number): void => {
