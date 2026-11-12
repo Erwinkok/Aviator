@@ -13,3 +13,6 @@ npm test            # Require a real build to emit bundle.js and exit successful
 ```
 
 Build output is written to `dist/bundle.js`.
+
+`wrangler.json` includes the empty `previews` block required by Cloudflare's
+`wrangler preview` command.

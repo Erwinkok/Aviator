@@ -5,6 +5,12 @@ const { tmpdir } = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
+test('Wrangler configuration opts into branch previews', () => {
+    const config = JSON.parse(readFileSync(path.resolve(__dirname, '../wrangler.json'), 'utf8'));
+    assert.ok(config.previews && typeof config.previews === 'object' && !Array.isArray(config.previews),
+        'Wrangler requires a top-level previews object for the preview command');
+});
+
 test('npm run build emits a bundle and exits successfully without watching', async () => {
     const output = mkdtempSync(path.join(tmpdir(), 'aviator-build-test-'));
     const result = await new Promise((resolve, reject) => {
