@@ -2,7 +2,12 @@
 
 Erwin Kok's pastel, low-poly flying game. Steer with the mouse or drag on a
 touchscreen; release **Space** to fire. The plane, rolling sea, clouds, meteors,
-collisions and speed progression preserve the original game.
+collisions and speed progression preserve the original game. Start each run with
+three hearts. A meteor hit costs one heart and grants 1.5 seconds of protection
+during active play; further contacts during protection cause no damage or knockback.
+At zero hearts the flight stops. Choose **Retry** (touch, mouse or keyboard) to
+start a fresh run without reloading the page. Health is shown at the top left;
+filled and outlined hearts distinguish remaining health without relying on colour.
 
 Rewritten in strict TypeScript with Vite and Three.js r187. There is no server,
 account, scoring system or external service. WebGL 2 is required.
@@ -44,6 +49,7 @@ automated GitHub checks can be enabled later with an appropriately scoped creden
 
 - `src/game.ts`: owns the scene, fixed-step loop, input and resource lifecycle.
 - `src/simulation.ts`: deterministic cadence and flight progress, independent of WebGL.
+- `src/health.ts`, `src/healthView.ts`: run health, hit protection and accessible health/retry UI.
 - `src/objects/`: aircraft, sea/clouds, meteors and projectiles.
 - `src/graphics/`: camera, original-palette lighting and renderer.
 - `test/`: logic tests and browser-only harness.

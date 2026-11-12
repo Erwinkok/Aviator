@@ -46,6 +46,15 @@ export class AirPlane {
     this.collisionSpeedX = x;
     this.collisionSpeedY = y;
   }
+
+  reset(width: number): void {
+    this.speed = 0;
+    this.displacementX = this.displacementY = 0;
+    this.collisionSpeedX = this.collisionSpeedY = 0;
+    this.mesh.position.set(-width, DEFAULT_HEIGHT, 0);
+    this.mesh.rotation.set(0, 0, 0);
+    this.propellor.rotation.set(0, 0, 0);
+  }
 }
 
 /** Change every duplicated BufferGeometry corner, preserving the original r115 shape. */

@@ -35,6 +35,11 @@ export class FlightProgress {
   private targetBaseSpeed = 0.35;
   private speedCheckpoint = 0;
 
+  reset(): void {
+    this.distance = this.speed = this.speedCheckpoint = 0;
+    this.baseSpeed = this.targetBaseSpeed = 0.35;
+  }
+
   update(delta: number, planeSpeed: number): void {
     this.distance += this.speed * delta * 50;
     // Crossings, rather than an exact modulo match: never miss a checkpoint.

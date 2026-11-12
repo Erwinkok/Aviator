@@ -42,7 +42,7 @@ export class MeteorField {
     return meteor;
   }
 
-  update(speed: number, delta: number, plane: AirPlane): void {
+  update(speed: number, delta: number, plane: AirPlane, onHit: () => boolean = () => true): void {
     for (const meteor of this.active) {
       meteor.previous.copy(meteor.mesh.position);
       meteor.angle += speed * delta * 0.6;
@@ -56,7 +56,7 @@ export class MeteorField {
       if (distanceSquared < 144) {
         const length = Math.sqrt(distanceSquared);
         // Exact overlaps must never inject NaN into the plane and camera.
-        plane.collide(length > 0 ? 5 * dx / length : -5, length > 0 ? 5 * dy / length : 0);
+        if (onHit()) plane.collide(length > 0 ? 5 * dx / length : -5, length > 0 ? 5 * dy / length : 0);
         this.remove(meteor);
       } else if (meteor.angle > Math.PI) {
         this.remove(meteor);
@@ -68,6 +68,12 @@ export class MeteorField {
     if (!this.active.delete(meteor)) return;
     this.scene.remove(meteor.mesh);
     this.pool.push(meteor);
+  }
+
+  reset(): void {
+    for (const meteor of this.active) this.remove(meteor);
+    this.lastDistance = 0;
+    this.nextDistance = this.interval();
   }
 
   dispose(): void {
