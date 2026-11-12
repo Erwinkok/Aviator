@@ -47,6 +47,7 @@ const modern = await build({
   stdin: {
     contents: `import {Game} from './src/game.ts';
       ${seed} const game=new Game(document.querySelector('#world'));
+      game.play(); game.stop();
       window.profile={tick:(dt)=>game.tick(dt),draw:()=>game.renderer.render(game.scene,game.camera.camera),
         fire:()=>game.weapon.fire(game.plane.mesh.position),finish:()=>game.renderer.getContext().finish(),
         info:()=>({calls:game.renderer.info.render.calls,triangles:game.renderer.info.render.triangles,

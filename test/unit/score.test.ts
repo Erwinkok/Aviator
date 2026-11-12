@@ -35,8 +35,12 @@ test('game over freezes score and retry starts a new independent run', () => {
   score.finish();
   score.update(1000, 10);
   assert.equal(score.total, 325);
+  assert.equal(score.distanceTravelled, 25);
+  assert.equal(score.meteorsDestroyed, 3);
   score.reset();
   assert.equal(score.total, 0);
+  assert.equal(score.distanceTravelled, 0);
+  assert.equal(score.meteorsDestroyed, 0);
   score.update(2.2, 1);
   assert.equal(score.total, 102);
 });

@@ -1,6 +1,7 @@
 html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #25252b; }
 .game-holder { position: absolute; width: 100%; height: 100%; background: linear-gradient(#e4e0ba, #f7d9aa); }
 .world { position: absolute; width: 100%; height: 100%; overflow: hidden; touch-action: none; }
+.world:focus { outline: none; }
 canvas { display: block; width: 100%; height: 100%; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #error { position: absolute; inset: 40% 10% auto; text-align: center; color: #2a363b; font: 1rem/1.5 system-ui, sans-serif; }
@@ -17,12 +18,18 @@ canvas { display: block; width: 100%; height: 100%; }
 .score-current { font-size: clamp(18px, 5vw, 28px); font-weight: 700; line-height: 1.3; }
 .score-current + .score-label { margin-top: 6px; }
 .score-best { font-size: 14px; }
-.game-over { max-width: min(340px, calc(100vw - 72px)); padding: 36px; border: 1px solid #b69b7b; border-radius: 12px; background: #faf0dc; color: #2a363b; text-align: center; font: 16px/1.5 system-ui, sans-serif; box-shadow: 0 16px 60px #2a363b26; }
+.game-over { max-width: min(340px, calc(100vw - 72px)); max-height: calc(100dvh - 48px); box-sizing: border-box; overflow-y: auto; padding: 36px; border: 1px solid #b69b7b; border-radius: 12px; background: #faf0dc; color: #2a363b; text-align: center; font: 16px/1.5 system-ui, sans-serif; box-shadow: 0 16px 60px #2a363b26; }
 .game-over::backdrop { background: #2a363b40; }
 .game-over h1 { margin: 0; font-size: clamp(28px, 6vw, 36px); line-height: 1.2; }
 .game-over p { margin: 14px 0 24px; }
 .game-over .final-score { margin: 20px 0 0; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .game-over .final-best { margin: 4px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.run-summary { margin: 18px 0; font-size: 13px; text-align: left; }
+.run-summary div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 4px 0; }
+.run-summary dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.game-over .flight-controls { font-size: 14px; line-height: 1.7; }
+.pause-button { position: absolute; z-index: 1; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); min-height: 44px; padding: 8px 20px; border: 1px solid #725955; border-radius: 6px; background: #faf0dc; color: #2a363b; font: 600 14px/1.5 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+.pause-button:focus-visible { outline: 3px solid #2a363b; outline-offset: 4px; }
 .game-over button { min-height: 48px; min-width: 148px; padding: 10px 24px; border: 0; border-radius: 6px; background: #b43f42; color: #fffaf0; font: 700 16px/1.5 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
 .game-over button:hover { background: #963437; }
 .game-over button:focus-visible { outline: 3px solid #2a363b; outline-offset: 4px; }

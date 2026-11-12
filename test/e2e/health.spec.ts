@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 async function load(page: Page) {
   await page.goto('http://127.0.0.1:4174/test/harness.html');
   await page.waitForFunction(() => window.aviatorTest?.game.renderer.info.render.calls > 0);
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await page.evaluate(() => {
     const game = window.aviatorTest.game;
     game.stop();
@@ -35,6 +36,8 @@ test('production page shows three filled hearts and no game-over screen', async 
   await page.goto('/');
   await expect(page.getByRole('status')).toHaveText('3 of 3 hearts');
   await expect(page.locator('.heart:not(.is-empty)')).toHaveCount(3);
+  await expect(page.getByRole('dialog', { name: 'Aviator', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(await page.evaluate(() => 'aviatorTest' in window)).toBe(false);
 });

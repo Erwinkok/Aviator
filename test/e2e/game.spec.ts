@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 async function harness(page: Page) {
   await page.goto('http://127.0.0.1:4174/test/harness.html');
   await page.waitForFunction(() => window.aviatorTest?.game.renderer.info.render.calls > 0);
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
 }
 
 test('production page starts WebGL without errors and retains the original full-screen scene', async ({ page }, info) => {
@@ -13,6 +14,8 @@ test('production page starts WebGL without errors and retains the original full-
   await page.goto('/');
   await expect(page.locator('canvas')).toHaveCount(1);
   await expect(page.locator('#error')).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'Aviator', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await page.waitForTimeout(2500);
   expect(await page.locator('canvas').boundingBox()).toEqual({ x: 0, y: 0, width: 1280, height: 720 });
   await page.screenshot({ path: info.outputPath('aviator-desktop.png') });
@@ -118,6 +121,7 @@ test('disposing and recreating a game leaves one canvas and no duplicate fire ha
     state.game = state.create();
     state.game.start();
   });
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.locator('canvas')).toHaveCount(1);
   await page.keyboard.press('Space');
   await expect.poll(() => page.evaluate(() => window.aviatorTest.game.weapon.active.size)).toBe(1);
