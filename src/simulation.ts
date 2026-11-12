@@ -1,3 +1,5 @@
+import { difficultyAt } from './difficulty.ts';
+
 export const FIXED_STEP = 1 / 60;
 export const MAX_FRAME_DELTA = 0.1;
 
@@ -31,24 +33,13 @@ export class FrameStepper {
 export class FlightProgress {
   distance = 0;
   speed = 0;
-  private baseSpeed = 0.35;
-  private targetBaseSpeed = 0.35;
-  private speedCheckpoint = 0;
 
   reset(): void {
-    this.distance = this.speed = this.speedCheckpoint = 0;
-    this.baseSpeed = this.targetBaseSpeed = 0.35;
+    this.distance = this.speed = 0;
   }
 
   update(delta: number, planeSpeed: number): void {
     this.distance += this.speed * delta * 50;
-    // Crossings, rather than an exact modulo match: never miss a checkpoint.
-    const checkpoint = Math.floor(this.distance / 100);
-    if (checkpoint > this.speedCheckpoint) {
-      this.targetBaseSpeed += (checkpoint - this.speedCheckpoint) * 2 * FIXED_STEP;
-      this.speedCheckpoint = checkpoint;
-    }
-    this.baseSpeed += (this.targetBaseSpeed - this.baseSpeed) * delta * 0.02;
-    this.speed = this.baseSpeed * planeSpeed;
+    this.speed = difficultyAt(this.distance).baseSpeed * Math.max(1.2, Math.min(1.6, planeSpeed));
   }
 }
