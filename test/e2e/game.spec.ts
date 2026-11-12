@@ -86,18 +86,24 @@ test('hidden pages pause simulation and resume without catching up background ti
 
 test('WebGL context loss pauses safely and rendering resumes after restoration', async ({ page }) => {
   await harness(page);
-  const before = await page.evaluate(() => {
+  const before = await page.evaluate(async () => {
     const game = window.aviatorTest.game;
     const gl = game.renderer.getContext();
     const extension = gl.getExtension('WEBGL_lose_context');
     if (!extension) throw new Error('WEBGL_lose_context is required for this check');
     window.aviatorTest.restoreContext = () => extension.restoreContext();
+    // Context loss is asynchronous. Sample after the game's previously registered
+    // listener has paused the loop, rather than counting frames before delivery.
+    const lost = new Promise<void>((resolve) => {
+      game.renderer.domElement.addEventListener('webglcontextlost', () => resolve(), { once: true });
+    });
     extension.loseContext();
+    await lost;
     return game.progress.distance;
   });
   await page.waitForTimeout(300);
   const paused = await page.evaluate(() => window.aviatorTest.game.progress.distance);
-  expect(paused - before).toBeLessThan(2);
+  expect(paused).toBe(before);
   await page.evaluate(() => window.aviatorTest.restoreContext?.());
   await expect.poll(() => page.evaluate(() => window.aviatorTest.game.progress.distance), { timeout: 10000 }).toBeGreaterThan(paused);
 });
