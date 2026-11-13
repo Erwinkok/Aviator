@@ -100,12 +100,12 @@ for (const phone of [false, true]) {
       }
       g.meteors.add = add;
       g.renderer.render(g.scene, g.camera.camera);
-      return { hearts: g.health.hearts, spawns, score: g.score.total, distance: g.progress.distance };
+      return { hearts: g.health.hearts, spawns, score: g.score.total, distance: g.progress.distance, coins: g.score.coinsCollected };
     });
     expect(recovery.hearts).toBe(3);
     expect(recovery.spawns).toBe(0);
     expect(recovery.distance).toBeGreaterThanOrEqual(2780);
-    expect(recovery.score).toBe(Math.floor(recovery.distance));
+    expect(recovery.score).toBe(Math.floor(recovery.distance) + recovery.coins * 25);
     expect(errors).toEqual([]);
     await page.screenshot({ path: info.outputPath(`recovery-${phone ? 'phone' : 'desktop'}.png`) });
     await context.close();
