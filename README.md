@@ -13,14 +13,25 @@ At zero hearts the flight stops. Choose **Retry** (touch, mouse or keyboard) to
 start a fresh run without reloading the page. Health is shown at the top left;
 filled and outlined hearts distinguish remaining health without relying on colour.
 
-Earn **one point per whole distance unit** and **100 points per meteor shot down**.
+Earn **one point per whole distance unit**, **100 points per meteor shot down**
+and **25 points per gold coin collected**.
 The score and personal best appear at the top right; Game over shows the final
-score, whole distance travelled and meteors destroyed. Colliding with meteors,
+score, whole distance travelled, meteors destroyed and coins collected. Colliding with meteors,
 missing shots and offscreen meteors earn no bonus.
 Retry resets the run's score while keeping the best. The best updates during play
 and is saved when the run ends or the page is hidden/left, without storage writes
 on every frame. It stays local to this browser and site; clearing site data resets
 it. If storage is unavailable, the HUD says **Best this visit** and play continues.
+
+Each meteor group offers a short three-coin trail along its clear altitude route
+and an optional five-coin trail through a tighter gap. Steer into coins to collect
+them; shooting pickups has no effect. A green cross pickup appears in the recovery
+portion of every third group and restores **one heart**, capped at three. At full
+health it is consumed without bonus points. Repairs preserve existing hit
+protection and cannot revive a finished run. Collection feedback appears above
+Pause; the opening controls explain both shapes. Pause and page suspension freeze
+pickup motion and collection; Retry clears pickups and coin totals. These initial
+spawn/reward values need player feedback.
 
 Difficulty starts gently and increases smoothly with flight distance, reaching a
 fixed speed/density ceiling at 2,400 units. The first meteor group begins spawning
@@ -72,6 +83,7 @@ automated GitHub checks can be enabled later with an appropriately scoped creden
 - `src/game.ts`: owns the scene, fixed-step loop, input and resource lifecycle.
 - `src/simulation.ts`: deterministic cadence and flight progress, independent of WebGL.
 - `src/difficulty.ts`: capped distance curve, encounter spacing and recovery timing.
+- `src/pickupPlan.ts`, `src/objects/landscape/pickups.ts`: safe/tighter coin routes, occasional repairs, swept collection and pooled shared geometry.
 - `src/health.ts`, `src/healthView.ts`: run health, hit protection and accessible health/retry UI.
 - `src/score.ts`: run score and resilient browser-local personal best storage.
 - `src/runFlow.ts`: ready, playing, paused and game-over transitions, separate from page suspension.

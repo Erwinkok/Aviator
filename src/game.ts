@@ -1,4 +1,4 @@
-import type { WebGLRenderer } from 'three';
+import { Vector3, type WebGLRenderer } from 'three';
 import { CameraController } from './graphics/camera.ts';
 import { createLighting } from './graphics/lighting.ts';
 import { createRenderer } from './graphics/renderer.ts';
@@ -16,6 +16,7 @@ import { Health } from './health.ts';
 import { HealthView } from './healthView.ts';
 import { PersonalBest, RunScore } from './score.ts';
 import { RunFlow } from './runFlow.ts';
+import { PickupField } from './objects/landscape/pickups.ts';
 
 export class Game {
   readonly scene = createScene();
@@ -30,6 +31,7 @@ export class Game {
   readonly sky: Sky;
   readonly meteors: MeteorField;
   readonly weapon: BasicWeapon;
+  readonly pickups: PickupField;
   readonly renderer: WebGLRenderer;
   readonly input: InputHandler;
   private readonly stepper = new FrameStepper();
@@ -41,6 +43,8 @@ export class Game {
   private contextLost = false;
   private readonly healthView: HealthView;
   private readonly onHit = (): boolean => this.health.hit();
+  private readonly previousPlane = new Vector3();
+  private readonly onEncounter = (safeLane: number, cycle: number): void => this.pickups.spawnTrail(safeLane, cycle);
 
   constructor(private readonly surface: HTMLElement, random: Random = Math.random) {
     this.renderer = createRenderer(surface);
@@ -53,6 +57,7 @@ export class Game {
     this.sky = new Sky(random);
     this.meteors = new MeteorField(this.scene, random);
     this.weapon = new BasicWeapon(this.scene);
+    this.pickups = new PickupField(this.scene);
     this.scene.add(this.plane.mesh, this.sea.mesh, this.sky.mesh);
     this.input = new InputHandler(surface, () => {
       if (this.running && this.flow.state === 'playing' && !document.hidden && !this.contextLost) this.weapon.fire(this.plane.mesh.position);
@@ -106,15 +111,21 @@ export class Game {
     if (this.disposed || this.health.gameOver || this.flow.state !== 'playing') return;
     this.health.update(delta);
     this.progress.update(delta, this.plane.speed);
+    this.previousPlane.copy(this.plane.mesh.position);
     this.plane.update(delta, this.input.position);
     this.camera.update(delta, this.input.position.x, this.plane.mesh.position.y);
     this.sea.update(this.progress.speed, delta);
     this.sky.update(this.progress.speed, delta);
-    this.meteors.spawn(this.progress.distance);
+    this.meteors.spawn(this.progress.distance, this.onEncounter);
     this.meteors.update(this.progress.speed, delta, this.plane, this.onHit);
     // A lethal collision ends scoring before any remaining bullets can hit.
     const destroyed = this.health.gameOver ? 0 : this.weapon.update(delta, this.meteors, this.camera.projectileBoundary);
-    this.score.update(this.progress.distance, destroyed);
+    const collected = this.health.gameOver ? { coins: 0, repairs: 0 } : this.pickups.update(this.progress.speed, delta, this.previousPlane, this.plane.mesh.position);
+    let repaired = 0;
+    for (let i = 0; i < collected.repairs; i++) if (this.health.repair()) repaired++;
+    this.healthView.advanceFeedback(delta);
+    if (collected.coins || collected.repairs) this.healthView.showPickups(collected.coins, repaired, collected.repairs > repaired);
+    this.score.update(this.progress.distance, destroyed, collected.coins);
     this.best.observe(this.score.total);
     if (this.health.gameOver) {
       this.score.finish();
@@ -149,6 +160,8 @@ export class Game {
     this.progress.reset();
     this.meteors.reset();
     this.weapon.reset();
+    this.pickups.reset();
+    this.healthView.clearFeedback();
     this.input.position.x = this.input.position.y = 0;
     this.plane.reset(this.surface.clientWidth);
     this.camera.camera.position.y = 100;
@@ -167,6 +180,7 @@ export class Game {
     this.healthView.dispose();
     this.weapon.dispose();
     this.meteors.dispose();
+    this.pickups.dispose();
     disposeTree(this.scene);
     this.sun.shadow.dispose();
     this.scene.clear();
@@ -191,7 +205,7 @@ export class Game {
 
   private updateScoreView(): void {
     this.healthView.updateScore(this.score.total, this.best.total, this.best.persistent,
-      this.score.distanceTravelled, this.score.meteorsDestroyed);
+      this.score.distanceTravelled, this.score.meteorsDestroyed, this.score.coinsCollected);
   }
 
   private saveBest(): void {
