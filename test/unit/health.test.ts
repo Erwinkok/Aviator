@@ -96,6 +96,8 @@ test('retry components discard previous speed, collision impulses and active obj
   assert.equal(field.active.size, 0);
   assert.equal(weapon.active.size, 0);
   field.spawn(21);
+  assert.equal(field.active.size, 0, 'Retry restores the quiet opening');
+  field.spawn(60);
   assert.equal([...field.active][0], meteor);
 
   const plane = new AirPlane(1280), fresh = new AirPlane(390);

@@ -37,17 +37,24 @@ test('large/negative frame gaps are bounded and reset ignores time spent hidden'
   assert.equal(stepper.advance(900000, () => assert.fail('must not simulate background time')), 0);
 });
 
-test('crossed speed checkpoints are applied even when the distance skips exact multiples', () => {
+test('distance jumps use the bounded smooth curve and Retry restores opening speed', () => {
   const progress = new FlightProgress();
   progress.distance = 99.9;
   progress.speed = 600;
   progress.update(FIXED_STEP, 1.4);
   assert.equal(progress.distance, 599.9);
-  assert.ok(progress.speed > 0.35 * 1.4);
+  assert.ok(progress.speed > 0.28 * 1.4);
   const speed = progress.speed;
   progress.update(FIXED_STEP, 1.4);
   assert.ok(progress.speed > speed);
   assert.ok(Number.isFinite(progress.speed));
+  progress.distance = 1e9;
+  progress.update(FIXED_STEP, 1.6);
+  assert.ok(Math.abs(progress.speed - 0.42 * 1.6) < 1e-10);
+  progress.reset();
+  progress.update(FIXED_STEP, 1.4);
+  assert.equal(progress.distance, 0);
+  assert.equal(progress.speed, 0.28 * 1.4);
 });
 
 test('normalization clamps pointer input and seeded scenes reproduce', () => {
