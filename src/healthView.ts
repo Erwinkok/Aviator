@@ -1,5 +1,6 @@
 import { MAX_HEARTS, type Health } from './health.ts';
 import type { RunPhase } from './runFlow.ts';
+import { COIN_POINTS } from './score.ts';
 
 const scoreFormat = new Intl.NumberFormat('en-US');
 interface FlowActions { play(): void; pause(): void; resume(): void; retry(): void }
@@ -18,6 +19,9 @@ export class HealthView {
   private readonly summary = document.createElement('dl');
   private readonly finalDistance = document.createElement('dd');
   private readonly finalMeteors = document.createElement('dd');
+  private readonly finalCoins = document.createElement('dd');
+  private readonly feedback = document.createElement('p');
+  private feedbackTime = 0;
   private readonly heading = document.createElement('h1');
   private readonly message = document.createElement('p');
   private readonly controls = document.createElement('p');
@@ -65,7 +69,8 @@ export class HealthView {
     this.summary.className = 'run-summary';
     this.finalDistance.className = 'final-distance';
     this.finalMeteors.className = 'final-meteors';
-    for (const [title, value] of [['Distance', this.finalDistance], ['Meteors destroyed', this.finalMeteors]] as const) {
+    this.finalCoins.className = 'final-coins';
+    for (const [title, value] of [['Distance', this.finalDistance], ['Meteors destroyed', this.finalMeteors], ['Coins collected', this.finalCoins]] as const) {
       const row = document.createElement('div');
       const label = document.createElement('dt');
       label.textContent = title;
@@ -73,7 +78,7 @@ export class HealthView {
       this.summary.append(row);
     }
     this.controls.className = 'flight-controls';
-    this.controls.innerHTML = 'Move your mouse or drag to steer.<br>Release <strong>Space</strong> on a keyboard to fire.<br>Use <strong>Pause</strong> or <strong>Esc</strong> to take a break.';
+    this.controls.innerHTML = 'Move your mouse or drag to steer.<br>Gold coins: <strong>+25 points</strong>. Green crosses: <strong>+1 heart</strong>.<br>Release <strong>Space</strong> on a keyboard to fire.<br>Use <strong>Pause</strong> or <strong>Esc</strong> to take a break.';
     this.actionButton.type = 'button';
     this.actionButton.autofocus = true;
     this.actionButton.addEventListener('click', () => {
@@ -88,11 +93,15 @@ export class HealthView {
     // Escape is handled by Game; never let native dialog cancellation bypass it.
     this.dialog.addEventListener('cancel', (event) => event.preventDefault(), { signal: this.controller.signal });
     this.dialog.append(this.heading, this.finalScore, this.finalBest, this.summary, this.message, this.controls, this.actionButton);
-    surface.append(this.hud, this.scoreHud, this.pauseButton, this.dialog);
+    this.feedback.className = 'pickup-feedback';
+    this.feedback.setAttribute('role', 'status');
+    this.feedback.setAttribute('aria-atomic', 'true');
+    this.feedback.hidden = true;
+    surface.append(this.hud, this.scoreHud, this.pauseButton, this.feedback, this.dialog);
   }
 
-  updateScore(score: number, best: number, persistent: boolean, distance: number, meteors: number): void {
-    const state = `${score}:${best}:${persistent}:${distance}:${meteors}`;
+  updateScore(score: number, best: number, persistent: boolean, distance: number, meteors: number, coins = 0): void {
+    const state = `${score}:${best}:${persistent}:${distance}:${meteors}:${coins}`;
     if (state === this.previousScore) return;
     this.previousScore = state;
     this.currentScore.textContent = scoreFormat.format(score);
@@ -102,6 +111,29 @@ export class HealthView {
     this.finalBest.textContent = `${persistent ? 'Personal best' : 'Best this visit'} ${scoreFormat.format(best)}`;
     this.finalDistance.textContent = scoreFormat.format(distance);
     this.finalMeteors.textContent = scoreFormat.format(meteors);
+    this.finalCoins.textContent = scoreFormat.format(coins);
+  }
+
+  showPickups(coins: number, repaired: number, full: boolean): void {
+    const parts: string[] = [];
+    if (coins) parts.push(`+${scoreFormat.format(coins * COIN_POINTS)} · ${coins === 1 ? 'Coin' : `${coins} coins`}`);
+    if (repaired) parts.push(`+${repaired} heart${repaired === 1 ? '' : 's'}`);
+    else if (full) parts.push('Health full');
+    this.feedback.textContent = parts.join(' / ');
+    this.feedback.hidden = false;
+    this.feedbackTime = 1.2;
+  }
+
+  advanceFeedback(delta: number): void {
+    if (this.feedbackTime === 0) return;
+    this.feedbackTime = Math.max(0, this.feedbackTime - delta);
+    if (this.feedbackTime === 0) this.clearFeedback();
+  }
+
+  clearFeedback(): void {
+    this.feedbackTime = 0;
+    this.feedback.hidden = true;
+    this.feedback.textContent = '';
   }
 
   update(health: Health, phase: RunPhase): void {
@@ -131,5 +163,6 @@ export class HealthView {
     this.hud.remove();
     this.scoreHud.remove();
     this.pauseButton.remove();
+    this.feedback.remove();
   }
 }

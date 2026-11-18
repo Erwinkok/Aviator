@@ -30,6 +30,7 @@ canvas { display: block; width: 100%; height: 100%; }
 .game-over .flight-controls { font-size: 14px; line-height: 1.7; }
 .pause-button { position: absolute; z-index: 1; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); min-height: 44px; padding: 8px 20px; border: 1px solid #725955; border-radius: 6px; background: #faf0dc; color: #2a363b; font: 600 14px/1.5 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
 .pause-button:focus-visible { outline: 3px solid #2a363b; outline-offset: 4px; }
+.pickup-feedback { position: absolute; z-index: 1; bottom: max(82px, calc(env(safe-area-inset-bottom) + 58px)); left: 50%; transform: translateX(-50%); max-width: calc(100% - 48px); box-sizing: border-box; margin: 0; padding: 6px 12px; border: 1px solid #b69b7b; border-radius: 6px; background: #faf0dc; color: #2a363b; text-align: center; font: 600 14px/1.5 system-ui, sans-serif; pointer-events: none; }
 .game-over button { min-height: 48px; min-width: 148px; padding: 10px 24px; border: 0; border-radius: 6px; background: #b43f42; color: #fffaf0; font: 700 16px/1.5 system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
 .game-over button:hover { background: #963437; }
 .game-over button:focus-visible { outline: 3px solid #2a363b; outline-offset: 4px; }

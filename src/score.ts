@@ -1,28 +1,34 @@
 export const METEOR_POINTS = 100;
+export const COIN_POINTS = 25;
 export const BEST_SCORE_KEY = 'aviator.best-score.v1';
 
-/** One point per whole flight-distance unit; projectile kills add a fixed bonus. */
+/** Whole flight distance, projectile kills and collected coins contribute points. */
 export class RunScore {
   private distance = 0;
   private kills = 0;
+  private coins = 0;
   private finished = false;
 
-  get total(): number { return Math.min(Number.MAX_SAFE_INTEGER, this.distance + this.kills * METEOR_POINTS); }
+  get total(): number { return Math.min(Number.MAX_SAFE_INTEGER, this.distance + this.kills * METEOR_POINTS + this.coins * COIN_POINTS); }
   get distanceTravelled(): number { return this.distance; }
   get meteorsDestroyed(): number { return this.kills; }
+  get coinsCollected(): number { return this.coins; }
 
-  update(distance: number, destroyedMeteors = 0): void {
+  update(distance: number, destroyedMeteors = 0, collectedCoins = 0): void {
     if (this.finished) return;
     if (Number.isFinite(distance)) this.distance = Math.min(Number.MAX_SAFE_INTEGER, Math.max(this.distance, Math.floor(distance)));
     if (Number.isSafeInteger(destroyedMeteors) && destroyedMeteors > 0) {
       this.kills = Math.min(Math.floor(Number.MAX_SAFE_INTEGER / METEOR_POINTS), this.kills + destroyedMeteors);
+    }
+    if (Number.isSafeInteger(collectedCoins) && collectedCoins > 0) {
+      this.coins = Math.min(Math.floor(Number.MAX_SAFE_INTEGER / COIN_POINTS), this.coins + collectedCoins);
     }
   }
 
   finish(): void { this.finished = true; }
 
   reset(): void {
-    this.distance = this.kills = 0;
+    this.distance = this.kills = this.coins = 0;
     this.finished = false;
   }
 }

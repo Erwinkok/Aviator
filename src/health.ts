@@ -22,6 +22,12 @@ export class Health {
     return true;
   }
 
+  repair(): boolean {
+    if (this.gameOver || this.remaining >= MAX_HEARTS) return false;
+    this.remaining++;
+    return true;
+  }
+
   reset(): void {
     this.remaining = MAX_HEARTS;
     this.protection = 0;

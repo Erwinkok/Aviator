@@ -26,7 +26,7 @@ export class MeteorField {
 
   constructor(private readonly scene: Scene, private readonly random: Random = Math.random) {}
 
-  spawn(distance: number): void {
+  spawn(distance: number, onEncounter?: (safeLane: number, cycle: number) => void): void {
     if (distance < this.nextDistance) return;
     const encounter = encounterAt(distance);
     if (encounter.recovering) {
@@ -39,6 +39,7 @@ export class MeteorField {
       this.safeLane = Math.max(0, Math.min(2, this.safeLane + (this.random() < 0.5 ? -1 : 1)));
       this.cycle = encounter.cycle;
       this.row = 0;
+      onEncounter?.(this.safeLane, this.cycle);
     }
     const difficulty = difficultyAt(distance);
     const blocked = [0, 1, 2].filter((lane) => lane !== this.safeLane);
